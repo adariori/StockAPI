@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('mouvements_stocks', function (Blueprint $table) {
-    $table->id();
-    $table->enum('type', ['entree', 'sortie']);
-    $table->integer('quantite');
-    $table->string('motif')->nullable();
-    $table->foreignId('user_id')->constrained()->restrictOnDelete();
-    $table->foreignId('produit_id')->constrained()->cascadeOnDelete();
-    $table->timestamps();
-});
+        Schema::create('mouvements_stocks', function (Blueprint $table) {
+            $table->id();
+            $table->enum('type', ['entree', 'sortie']);
+            $table->integer('quantite');
+            $table->string('motif')->nullable();
+            $table->foreignId('user_id')->constrained()->restrictOnDelete();
+            $table->foreignId('produit_id')->constrained()->cascadeOnDelete();
+            $table->timestamps();
+        });
     }
 
     /**
