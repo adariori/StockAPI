@@ -1,4 +1,3 @@
-```markdown
 ## Ce que cette PR fait
 <!-- Une phrase claire sur l'objectif -->
 
@@ -17,4 +16,3 @@
 - [ ] Le .env.example est mis à jour si nouvelle variable
 - [ ] Le README est mis à jour si nécessaire
 - [ ] Les migrations sont réversibles (down() écrit)
-```
