@@ -7,13 +7,16 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class CategorieResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id'             => $this->id,
+            'nom'            => $this->nom,
+            'description'    => $this->description,
+            'produits_count' => $this->whenCounted('produits'),
+            'produits'       => ProduitResource::collection($this->whenLoaded('produits')),
+            'created_at'     => $this->created_at?->toIso8601String(),
+            'updated_at'     => $this->updated_at?->toIso8601String(),
+        ];
     }
 }
