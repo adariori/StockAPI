@@ -2,6 +2,12 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CategorieController;
+use App\Http\Controllers\Api\ProduitController;
+
+
+Route::apiResource('categories', CategorieController::class);
+Route::apiResource('produits', ProduitController::class);
 
 // route publiques
 Route::post('/register', [AuthController::class, 'register']);
