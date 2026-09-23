@@ -67,8 +67,8 @@ class ProduitController extends Controller
     {
         $data = $request->validated();
 
-        // Si une nouvelle image est envoyée, supprimer l'ancienne et stocker la nouvelle
         if ($request->hasFile('image')) {
+            // Suppression de l'ancienne image si elle existe
             if ($produit->image_path && Storage::disk('public')->exists($produit->image_path)) {
                 Storage::disk('public')->delete($produit->image_path);
             }
