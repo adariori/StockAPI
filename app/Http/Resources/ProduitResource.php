@@ -18,11 +18,8 @@ class ProduitResource extends JsonResource
             'stock_actuel' => (int) $this->stock_actuel,
             'stock_min'    => (int) $this->stock_min,
             'stock_faible' => $this->stock_actuel <= $this->stock_min,
-            'image_url'    => $this->image_path ? Storage::url($this->image_path) : null,
-            
-            'categorie_id' => $this->categorie_id,
+            'image_url'    => $this->image_path ? url(Storage::url($this->image_path)) : null,
             'categorie'    => new CategorieResource($this->whenLoaded('categorie')),
-            
             'created_at'   => $this->created_at?->toIso8601String(),
         ];
     }
