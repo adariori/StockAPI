@@ -3,27 +3,42 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMouvementRequest;
+use App\Http\Resources\MouvementStockResource;
 use App\Models\MouvementStock;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Resources\MouvementStockResource;
-use App\Http\Requests\StoreMouvementRequest;
-use Illuminate\Http\JsonResponse;
 
 class MouvementStockController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Liste paginée des mouvements avec filtres.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $mouvements = MouvementStock::with(['user', 'produit'])->latest()->get();
+        $mouvements = MouvementStock::query()
+            ->with(['user', 'produit'])
+            ->when($request->filled('produit_id'), function ($query) use ($request) {
+                $query->where('produit_id', $request->integer('produit_id'));
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->string('type')->toString());
+            })
+            ->when($request->filled('date_debut'), function ($query) use ($request) {
+                $query->whereDate('created_at', '>=', $request->string('date_debut')->toString());
+            })
+            ->when($request->filled('date_fin'), function ($query) use ($request) {
+                $query->whereDate('created_at', '<=', $request->string('date_fin')->toString());
+            })
+            ->latest()
+            ->paginate(15);
 
         return MouvementStockResource::collection($mouvements);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Créer un mouvement.
      */
     public function store(StoreMouvementRequest $request): JsonResponse
     {
@@ -34,34 +49,18 @@ class MouvementStockController extends Controller
         $mouvement = MouvementStock::create($data);
 
         return response()->json([
-            'message' => 'Mouvement de stock enregistré',
-            'data'    => new MouvementStockResource($mouvement->load(['user', 'produit']))
+            'message' => 'Mouvement de stock enregistré.',
+            'data' => new MouvementStockResource($mouvement->load(['user', 'produit'])),
         ], 201);
     }
 
     /**
-     * Display the specified resource.
+     * Afficher un mouvement spécifique.
      */
-   public function show(MouvementStock $mouvement): JsonResponse
+    public function show(MouvementStock $mouvement): JsonResponse
     {
         return response()->json([
-            'data' => new MouvementStockResource($mouvement->load(['user', 'produit']))
-        ], 200);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            'data' => new MouvementStockResource($mouvement->load(['user', 'produit'])),
+        ]);
     }
 }
