@@ -47,7 +47,14 @@ class MouvementStockController extends Controller
     {
         $validated = $request->validated();
 
-        $mouvement = DB::transaction(function () use ($validated, $request) {
+        if ($request->user()->role !== 'admin' && $validated['type'] === 'sortie') {
+            return response()->json([
+                'message' => 'Seul un administrateur peut enregistrer une sortie de stock.',
+            ], 403);
+        }
+
+        /** @var array{mouvement: MouvementStock, alerte: bool} $resultat */
+        $resultat = DB::transaction(function () use ($validated, $request) {
             /** @var Produit $produit */
             $produit = Produit::query()
                 ->lockForUpdate()
@@ -65,15 +72,24 @@ class MouvementStockController extends Controller
                 $produit->decrement('stock_actuel', $validated['quantite']);
             }
 
-            return MouvementStock::query()->create([
+            $mouvement = MouvementStock::query()->create([
                 ...$validated,
                 'user_id' => $request->user()->id,
-            ])->load(['user', 'produit']);
+            ]);
+
+            $produit->refresh();
+            $alerte = $produit->stock_actuel <= $produit->stock_min;
+
+            return [
+                'mouvement' => $mouvement->load(['user', 'produit']),
+                'alerte' => $alerte,
+            ];
         });
 
         return response()->json([
             'message' => 'Mouvement de stock enregistré.',
-            'data' => new MouvementStockResource($mouvement),
+            'alerte' => $resultat['alerte'],
+            'data' => new MouvementStockResource($resultat['mouvement']),
         ], 201);
     }
 
