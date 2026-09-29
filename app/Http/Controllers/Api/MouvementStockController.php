@@ -7,6 +7,7 @@ use App\Http\Requests\StoreMouvementRequest;
 use App\Http\Resources\MouvementStockResource;
 use App\Models\MouvementStock;
 use App\Models\Produit;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -15,11 +16,15 @@ use Illuminate\Validation\ValidationException;
 
 class MouvementStockController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Liste paginée des mouvements avec filtres.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $this->authorize('viewAny', MouvementStock::class);
+
         $mouvements = MouvementStock::query()
             ->with(['user', 'produit'])
             ->when($request->filled('produit_id'), function ($query) use ($request) {
@@ -47,11 +52,7 @@ class MouvementStockController extends Controller
     {
         $validated = $request->validated();
 
-        if ($request->user()->role !== 'admin' && $validated['type'] === 'sortie') {
-            return response()->json([
-                'message' => 'Seul un administrateur peut enregistrer une sortie de stock.',
-            ], 403);
-        }
+        $this->authorize('create', [MouvementStock::class, $validated['type']]);
 
         /** @var array{mouvement: MouvementStock, alerte: bool} $resultat */
         $resultat = DB::transaction(function () use ($validated, $request) {
@@ -98,6 +99,8 @@ class MouvementStockController extends Controller
      */
     public function show(MouvementStock $mouvement): JsonResponse
     {
+        $this->authorize('view', $mouvement);
+
         return response()->json([
             'data' => new MouvementStockResource($mouvement->load(['user', 'produit'])),
         ]);
